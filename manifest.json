@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "PayU RSS news reader",
+  "version": "1.0",
+  "description": "PayU RSS news reader",
+  "permissions": ["activeTab", "storage", "alarms"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "20": "images/icon/payu_20.png"
+    }
+  },
+  "host_permissions": ["https://status.secure.payu.com/history.rss"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
