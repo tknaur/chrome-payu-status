@@ -10,6 +10,7 @@
       "20": "images/icon/payu_20.png"
     }
   },
+  "options_page": "options.html",
   "host_permissions": ["https://status.secure.payu.com/history.rss"],
   "background": {
     "service_worker": "background.js"
