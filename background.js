@@ -1,6 +1,6 @@
 const RSS_URL = 'https://status.secure.payu.com/history.rss';
 const STORAGE_KEY = 'payu_statuspage_version';
-const HEADER_NAME = 'etag';
+const HEADER_NAME = 'x-statuspage-version';
 
 async function fetchRSS() {
 	const lastValue = await getValue(STORAGE_KEY);
