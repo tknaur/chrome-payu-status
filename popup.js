@@ -21,8 +21,17 @@ function displayFeed(xml) {
 	for (let i = 0; i < items.length; i++) {
 		const title = items[i].querySelector("title").textContent;
 		const link = items[i].querySelector("link").textContent;
-		const createdAt = formatDate(new Date(items[i].querySelector("pubDate").textContent));
+		const pubDate = new Date(items[i].querySelector("pubDate").textContent);
+		const createdAt = formatDate(pubDate);
 		const listItem = document.createElement("li");
+		const today = new Date();
+
+		if (pubDate.getDate() === today.getDate() 
+			&& pubDate.getMonth() === today.getMonth() 
+			&& pubDate.getFullYear() === today.getFullYear()) {
+			listItem.classList.add("today-entry");
+		}
+
 		listItem.innerHTML = `<a href="${link}" target="_blank">${title}</a><br><span>${createdAt}</span>`;
 		feedList.appendChild(listItem);
 		if (i === 5) {
