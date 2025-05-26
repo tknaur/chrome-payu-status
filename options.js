@@ -18,21 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('save').addEventListener('click', () => {
         const value = parseInt(maxItemsInput.value, 10);
         
-		// chrome.storage.sync.set({[STORAGE_KEY_MI]: value }, () => {
-        //     status.textContent = 'Zapisano!';
-        //     setTimeout(() => status.textContent = '', 1500);
-		// });
-
 		chrome.storage.local.set({ [STORAGE_KEY_MI]: value }, () => {
 			status.textContent = 'Zapisano!';
 			setTimeout(() => status.textContent = '', 1500);
 		});
 
 		console.log('Max items saved:', value);
-
-
-
-		//await chrome.storage.local.set({ [key]: value });
-
     });
 });
