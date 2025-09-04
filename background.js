@@ -3,25 +3,39 @@ const STORAGE_KEY = 'payu_statuspage_version';
 const HEADER_NAME = 'x-statuspage-version';
 
 async function fetchRSS() {
-	const lastValue = await getValue(STORAGE_KEY);
+    const lastHash = await getValue(STORAGE_KEY);
 
-	try {
-		const response = await fetch(RSS_URL, {
-			method: 'HEAD',
-			headers: {
-			    'Cache-Control': 'no-cache'
-			}
-		});
+    try {
+        const response = await fetch(RSS_URL, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache'
+            }
+        });
 
-		const controlHeader = response.headers.get(HEADER_NAME);
-
-		if (controlHeader !== (await getValue(STORAGE_KEY))) {
-              await updateBadge();
-              await storeValue(STORAGE_KEY, controlHeader);
+        if (!response.ok) {
+            console.error('Failed to fetch RSS feed:', response.status);
+            return;
         }
-	} catch (error) {
-		console.error('Error fetching RSS feed:', error);
-	}
+
+        const newContent = await response.text();
+        const newHash = await generateHash(newContent);
+
+        if (newHash !== lastHash) {
+            await updateBadge();
+            await storeValue(STORAGE_KEY, newHash);
+        }
+    } catch (error) {
+        console.error('Error fetching RSS feed:', error);
+    }
+}
+
+async function generateHash(content) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function updateBadge() {
