@@ -1,9 +1,8 @@
 const RSS_URL = 'https://status.secure.payu.com/history.rss';
-const STORAGE_KEY = 'payu_statuspage_version';
-const HEADER_NAME = 'x-statuspage-version';
+const STORAGE_KEY = 'payu_statuspage_last_item_guid';
 
 async function fetchRSS() {
-    const lastHash = await getValue(STORAGE_KEY);
+    const lastItemGuid = await getValue(STORAGE_KEY);
 
     try {
         const response = await fetch(RSS_URL, {
@@ -18,24 +17,41 @@ async function fetchRSS() {
             return;
         }
 
-        const newContent = await response.text();
-        const newHash = await generateHash(newContent);
+        const rssContent = await response.text();
+        const firstItemGuid = extractFirstItemGuid(rssContent);
 
-        if (newHash !== lastHash) {
+        if (!firstItemGuid) {
+            console.warn('Could not extract first item GUID from RSS');
+            return;
+        }
+
+        if (firstItemGuid !== lastItemGuid) {
             await updateBadge();
-            await storeValue(STORAGE_KEY, newHash);
+            await storeValue(STORAGE_KEY, firstItemGuid);
+            console.log('New incident detected:', firstItemGuid);
         }
     } catch (error) {
         console.error('Error fetching RSS feed:', error);
     }
 }
 
-async function generateHash(content) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(content);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+function extractFirstItemGuid(rssContent) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(rssContent, 'application/xml');
+    
+    if (xmlDoc.parseError) {
+        console.error('Failed to parse RSS:', xmlDoc.parseError);
+        return null;
+    }
+
+    const firstItem = xmlDoc.querySelector('channel > item');
+    if (!firstItem) {
+        console.warn('No items found in RSS feed');
+        return null;
+    }
+
+    const guidElement = firstItem.querySelector('guid');
+    return guidElement ? guidElement.textContent.trim() : null;
 }
 
 async function updateBadge() {
@@ -68,7 +84,7 @@ async function getValue(key) {
 }
 
 
-chrome.alarms.create("keepAlive", { periodInMinutes: 5 });
+chrome.alarms.create("keepAlive", { periodInMinutes: 15 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
 	if (alarm.name === "keepAlive") {
